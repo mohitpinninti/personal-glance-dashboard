@@ -162,7 +162,7 @@
 
         - type: custom-api
           title: Home Controls
-          cache: 15m
+          cache: 5s
           template: |
             {{/* ================= Home Assistant Variables ================= */}}
             {{ $haURL := "http://192.168.0.124:8123" }}
@@ -198,6 +198,9 @@
                 {{ end }}
               {{ end }}
 
+              {{ $brightnessPercent := div (mul $brightness 100) 255 }}
+
+
               {{/* ================= Render the Card ================= */}}
               <div style="padding:16px;">
 
@@ -221,7 +224,11 @@
                 <div style="padding:12px 0; display:flex; justify-content:space-between; align-items:center;">
                   <div>Lamp</div>
                   <div style="opacity:0.7;">
-                    {{ if eq $lamp "on" }}💡 On{{ else }}⚫ Off{{ end }}
+                    {{ if eq $lamp "on" }}
+                      💡 {{ $brightnessPercent }}%
+                    {{ else }}
+                      Off
+                    {{ end }}
                   </div>
                 </div>
 
