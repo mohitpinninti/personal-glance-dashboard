@@ -144,3 +144,86 @@
             - type: reddit
               subreddit: selfhosted
               show-thumbnails: true
+
+    - size: small
+      widgets:
+        - type: markets
+          markets:
+            - symbol: SPY
+              name: S&P 500
+            - symbol: BTC-USD
+              name: Bitcoin
+            - symbol: NVDA
+              name: NVIDIA
+            - symbol: AAPL
+              name: Apple
+            - symbol: MSFT
+              name: Microsoft
+
+        - type: custom-api
+          title: Home Controls
+          cache: 15m
+          template: |
+            {{/* ================= Home Assistant Variables ================= */}}
+            {{ $haURL := "http://192.168.0.124:8123" }}
+            {{ $haToken := "${HOME_ASSISTANT_TOKEN}" }}
+
+            {{/* ================= Fetch Entity States ================= */}}
+            {{ $states := newRequest (print $haURL "/api/states")
+              | withHeader "Authorization" (print "Bearer " $haToken)
+              | getResponse }}
+            
+            {{/* ================= Extract the Entities ================= */}}
+            {{ if ne $states.Response.StatusCode 200 }}
+              <p>Home Assistant Error: {{ $states.Response.Status }}</p>
+            {{ else }}
+
+
+              {{ $switch1 := "" }}
+              {{ $switch2 := "" }}
+              {{ $lamp := "" }}
+              {{ $brightness := 0 }}
+
+
+              {{ range $states.JSON.Array "" }}
+                {{ if eq (.String "entity_id") "switch.${SWITCH_1_ENTRY_ID}" }}
+                  {{ $switch1 = .String "state" }}
+                {{ end }}
+                {{ if eq (.String "entity_id") "switch.${SWITCH_2_ENTRY_ID}" }}
+                  {{ $switch2 = .String "state" }}
+                {{ end }}
+                {{ if eq (.String "entity_id") "light.${LIGHT_1_ENTRY_ID}" }}
+                  {{ $lamp = .String "state" }}
+                  {{ $brightness = .Int "attributes.brightness" }}
+                {{ end }}
+              {{ end }}
+
+              {{/* ================= Render the Card ================= */}}
+              <div style="padding:16px;">
+
+                <!-- Switch 1 -->
+                <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
+                  <div>Switch 1</div>
+                  <div style="opacity:0.7;">
+                    {{ if eq $switch1 "on" }}🟢 On{{ else }}⚪ Off{{ end }}
+                  </div>
+                </div>
+
+                <!-- Switch 2 -->
+                <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
+                  <div>Switch 2</div>
+                  <div style="opacity:0.7;">
+                    {{ if eq $switch2 "on" }}🟢 On{{ else }}⚪ Off{{ end }}
+                  </div>
+                </div>
+
+                <!-- Dimming Lamp -->
+                <div style="padding:12px 0; display:flex; justify-content:space-between; align-items:center;">
+                  <div>Lamp</div>
+                  <div style="opacity:0.7;">
+                    {{ if eq $lamp "on" }}💡 On{{ else }}⚫ Off{{ end }}
+                  </div>
+                </div>
+
+              </div>
+            {{ end }}
