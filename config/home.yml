@@ -1,21 +1,17 @@
 - name: Home
-  # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
-  # hide-desktop-navigation: true
   columns:
     - size: small
       widgets:
         - type: weather
           location: Bellevue, Washington, United States
-          units: imperial # alternatively "metric"
-          hour-format: 12h # alternatively "24h"
-          # Optionally hide the location from being displayed in the widget
-          # hide-location: true
+          units: imperial
+          hour-format: 12h
 
         - type: calendar
           first-day-of-week: monday
 
         - type: custom-api
-          title: Reformatted Events
+          title: Upcoming Events
           cache: 15m
           template: |
             {{/* ================= TOKEN ================= */}}
@@ -45,17 +41,22 @@
                 <p>Event Error: {{ $events.Response.Status }}</p>
               {{ else }}
 
-                <div style="padding:16px;">
+                <div>
                   {{ $currentDate := "" }}
 
                   {{ range $events.JSON.Array "items" }}
 
-                    {{/* ===== PREDECLARE VARIABLES (IMPORTANT) ===== */}}
+                    {{/* ---- Extract event fields ---- */}}
+                    {{ $summary := .String "summary" }}
+                    {{ $location := .String "location" }}
+                    {{ $description := .String "description" }}
+
+                    {{/* ---- Compute start/end + all-day ---- */}}
+                    {{ $startRaw := .String "start.dateTime" }}
+                    {{ $isAllDay := false }}
                     {{ $start := "" }}
                     {{ $end := "" }}
-                    {{ $isAllDay := false }}
 
-                    {{ $startRaw := .String "start.dateTime" }}
                     {{ if eq $startRaw "" }}
                       {{ $isAllDay = true }}
                       {{ $start = (.String "start.date") | parseLocalTime "DateOnly" }}
@@ -67,45 +68,58 @@
 
                     {{ $eventDate := $start | formatTime "Mon, Jan 2" }}
 
-                    {{/* ===== DATE HEADER ===== */}}
+                    {{/* ---- Date header ---- */}}
                     {{ if ne $eventDate $currentDate }}
-                      {{ $currentDate = $eventDate }}
-                      <div style="margin-top:20px; font-size:14px; font-weight:600; opacity:0.7;">
+                      <div style="
+                        {{ if ne $currentDate "" }}margin-top:20px;{{ end }}
+                        font-size:14px;
+                        font-weight:600;
+                        opacity:0.7;">
                         {{ $eventDate }}
                       </div>
+                      {{ $currentDate = $eventDate }}
                     {{ end }}
 
-                    {{/* ===== EVENT ROW ===== */}}
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
 
-                      <div>
+                      {{ if ne $summary "" }}
                         <div style="font-weight:500;">
-                          {{ .String "summary" }}
+                          {{ $summary }}
+                        </div>
+                      {{ end }}
+
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div style="font-size:13px; opacity:0.6;">
+                          {{ if not $isAllDay }}
+                            {{ $start | formatTime "3:04 PM" }} - {{ $end | formatTime "3:04 PM" }}
+                          {{ else }}
+                            All Day
+                          {{ end }}
                         </div>
 
-                        {{ if not $isAllDay }}
-                          <div style="font-size:13px; opacity:0.6;">
-                            {{ $start | formatTime "3:04 PM" }} -
-                            {{ $end | formatTime "3:04 PM" }}
-                          </div>
-                        {{ else }}
-                          <div style="font-size:13px; opacity:0.6;">
-                            All Day
-                          </div>
-                        {{ end }}
+                        <div style="font-size:13px; opacity:0.5;" {{ $start | toRelativeTime }}>
+                        </div>
                       </div>
 
-                      <div style="font-size:13px; opacity:0.5;">
-                        {{ $start | toRelativeTime }}
-                      </div>
+                      {{ if ne $location "" }}
+                        <div style="margin-top:6px; font-size:13px; opacity:0.7;">
+                          {{ $location }}
+                        </div>
+                      {{ end }}
+
+                      {{ if ne $description "" }}
+                        <div style="margin-top:6px; font-size:13px; opacity:0.65; line-height:1.4;">
+                          {{ $description }}
+                        </div>
+                      {{ end }}
 
                     </div>
 
-                  {{ end }}
+                  {{ end }}   {{/* END range */}}
                 </div>
 
-              {{ end }}
-            {{ end }}
+              {{ end }}   {{/* END events status check */}}
+            {{ end }}     {{/* END token status check */}}
 
     - size: full
       widgets:
@@ -116,11 +130,11 @@
 
         - type: videos
           channels:
-            - UCXuqSBlHAE6Xw-yeJA0Tunw # Linus Tech Tips
-            - UCR-DXc1voovS8nhAvccRZhg # Jeff Geerling
-            - UCsBjURrPoezykLs9EqgamOA # Fireship
-            - UCBJycsmduvYEL83R_U4JriQ # Marques Brownlee
-            - UCHnyfMqiRRG1u-2MsSQLbXA # Veritasium
+            - UCXuqSBlHAE6Xw-yeJA0Tunw
+            - UCR-DXc1voovS8nhAvccRZhg
+            - UCsBjURrPoezykLs9EqgamOA
+            - UCBJycsmduvYEL83R_U4JriQ
+            - UCHnyfMqiRRG1u-2MsSQLbXA
 
         - type: group
           widgets:
