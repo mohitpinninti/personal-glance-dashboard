@@ -162,75 +162,165 @@
 
         - type: custom-api
           title: Home Controls
-          cache: 5s
+          cache: 3s
           template: |
-            {{/* ================= Home Assistant Variables ================= */}}
-            {{ $haURL := "http://192.168.0.124:8123" }}
-            {{ $haToken := "${HOME_ASSISTANT_TOKEN}" }}
+            <style>
+              .device-card {
+                padding: 8px;
+                margin-bottom: 8px;
+                border-radius: 8px;
+              }
 
-            {{/* ================= Fetch Entity States ================= */}}
-            {{ $states := newRequest (print $haURL "/api/states")
-              | withHeader "Authorization" (print "Bearer " $haToken)
-              | getResponse }}
-            
-            {{/* ================= Extract the Entities ================= */}}
-            {{ if ne $states.Response.StatusCode 200 }}
-              <p>Home Assistant Error: {{ $states.Response.Status }}</p>
-            {{ else }}
+              .device-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
 
+              .device-name {
+                font-weight: bold;
+              }
 
-              {{ $switch1 := "" }}
-              {{ $switch2 := "" }}
-              {{ $lamp := "" }}
-              {{ $brightness := 0 }}
+              .status-on {
+                color: var(--color-positive);
+                font-weight: bold;
+              }
 
+              .status-off {
+                color: var(--color-negative);
+                font-weight: bold;
+              }
 
-              {{ range $states.JSON.Array "" }}
-                {{ if eq (.String "entity_id") "switch.${SWITCH_1_ENTRY_ID}" }}
-                  {{ $switch1 = .String "state" }}
-                {{ end }}
-                {{ if eq (.String "entity_id") "switch.${SWITCH_2_ENTRY_ID}" }}
-                  {{ $switch2 = .String "state" }}
-                {{ end }}
-                {{ if eq (.String "entity_id") "light.${LIGHT_1_ENTRY_ID}" }}
-                  {{ $lamp = .String "state" }}
-                  {{ $brightness = .Int "attributes.brightness" }}
-                {{ end }}
-              {{ end }}
+              .btn {
+                font-size: 18px;
+                margin-left: 6px;
+                cursor: pointer;
+              }
 
-              {{ $brightnessPercent := div (mul $brightness 100) 255 }}
+              .brightness-controls button {
+                margin-left: 6px;
+              }
+            </style>
 
+            {{/* Fetch Switch 1 */}}
+            {{ $switch1 := newRequest "${HOME_ASSISTANT_URL}/api/states/switch.${SWITCH_1_ENTITY_ID}"
+                | withHeader "Authorization" "Bearer ${HOME_ASSISTANT_TOKEN}"
+                | getResponse
+            }}
 
-              {{/* ================= Render the Card ================= */}}
-              <div style="padding:16px;">
+            {{/* Fetch Switch 2 */}}
+            {{ $switch2 := newRequest "${HOME_ASSISTANT_URL}/api/states/switch.${SWITCH_2_ENTITY_ID}"
+                | withHeader "Authorization" "Bearer ${HOME_ASSISTANT_TOKEN}"
+                | getResponse
+            }}
 
-                <!-- Switch 1 -->
-                <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
-                  <div>Switch 1</div>
-                  <div style="opacity:0.7;">
-                    {{ if eq $switch1 "on" }}🟢 On{{ else }}⚪ Off{{ end }}
+            {{/* Fetch Light */}}
+            {{ $light := newRequest "${HOME_ASSISTANT_URL}/api/states/light.${LIGHT_1_ENTITY_ID}"
+                | withHeader "Authorization" "Bearer ${HOME_ASSISTANT_TOKEN}"
+                | getResponse
+            }}
+
+            {{ if and (eq $switch1.Response.StatusCode 200) (eq $switch2.Response.StatusCode 200) (eq $light.Response.StatusCode 200) }}
+
+              {{ $s1State := $switch1.JSON.String "state" }}
+              {{ $s2State := $switch2.JSON.String "state" }}
+              {{ $lightState := $light.JSON.String "state" }}
+              {{ $brightness := $light.JSON.Int "attributes.brightness" }}
+
+              <!-- SWITCH 1 -->
+              <div class="device-card widget-content-frame">
+                <div class="device-row">
+                  <div>
+                    <div class="device-name">Switch 1</div>
+                    <div class="{{ if eq $s1State "on" }}status-on{{ else }}status-off{{ end }}">
+                      {{ $s1State }}
+                    </div>
+                  </div>
+                  <div>
+                    <button class="btn"
+                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/switch/toggle',{
+                        method:'POST',
+                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
+                        body: JSON.stringify({entity_id:'switch.${SWITCH_1_ENTITY_ID}'})
+                      }); setTimeout(()=>location.reload(),1000);">
+                      🔄
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                <!-- Switch 2 -->
-                <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
-                  <div>Switch 2</div>
-                  <div style="opacity:0.7;">
-                    {{ if eq $switch2 "on" }}🟢 On{{ else }}⚪ Off{{ end }}
+              <!-- SWITCH 2 -->
+              <div class="device-card widget-content-frame">
+                <div class="device-row">
+                  <div>
+                    <div class="device-name">Switch 2</div>
+                    <div class="{{ if eq $s2State "on" }}status-on{{ else }}status-off{{ end }}">
+                      {{ $s2State }}
+                    </div>
+                  </div>
+                  <div>
+                    <button class="btn"
+                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/switch/toggle',{
+                        method:'POST',
+                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
+                        body: JSON.stringify({entity_id:'switch.${SWITCH_2_ENTITY_ID}'})
+                      }); setTimeout(()=>location.reload(),1000);">
+                      🔄
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                <!-- Dimming Lamp -->
-                <div style="padding:12px 0; display:flex; justify-content:space-between; align-items:center;">
-                  <div>Lamp</div>
-                  <div style="opacity:0.7;">
-                    {{ if eq $lamp "on" }}
-                      💡 {{ $brightnessPercent }}%
-                    {{ else }}
-                      Off
+              <!-- LIGHT -->
+              <div class="device-card widget-content-frame">
+                <div class="device-row">
+                  <div>
+                    <div class="device-name">Living Room Light</div>
+                    <div class="{{ if eq $lightState "on" }}status-on{{ else }}status-off{{ end }}">
+                      {{ $lightState }}
+                    </div>
+                    {{ if eq $lightState "on" }}
+                      <div style="font-size:12px;">Brightness: {{ $brightness }}</div>
                     {{ end }}
                   </div>
-                </div>
 
+                  <div>
+                    <!-- Toggle -->
+                    <button class="btn"
+                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/light/toggle',{
+                        method:'POST',
+                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
+                        body: JSON.stringify({entity_id:'light.${LIGHT_1_ENTITY_ID}'})
+                      }); setTimeout(()=>location.reload(),1000);">
+                      💡
+                    </button>
+
+                    <!-- Brightness Down -->
+                    <button class="btn"
+                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/light/turn_on',{
+                        method:'POST',
+                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
+                        body: JSON.stringify({entity_id:'light.${LIGHT_1_ENTITY_ID}',brightness_step:-25})
+                      }); setTimeout(()=>location.reload(),1000);">
+                      ➖
+                    </button>
+
+                    <!-- Brightness Up -->
+                    <button class="btn"
+                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/light/turn_on',{
+                        method:'POST',
+                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
+                        body: JSON.stringify({entity_id:'light.living_room',brightness_step:25})
+                      }); setTimeout(()=>location.reload(),1000);">
+                      ➕
+                    </button>
+                  </div>
+                </div>
               </div>
+
+            {{ else }}
+              <div class="status-off">Failed to connect to Home Assistant</div>
+              <div class="status-off">switch 1: {{ $switch1.Response.StatusCode }}</div>
+              <div class="status-off">switch 2: {{ $switch2.Response.StatusCode }}</div>
+              <div class="status-off">light: {{ $light.Response.StatusCode }}</div>
             {{ end }}
