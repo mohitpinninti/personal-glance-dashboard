@@ -284,16 +284,16 @@
                         .then(async response => {
                           if (!response.ok) {
                             const text = await response.text();
-                            console.error('Home Assistant error:', response.status, text);
+                            console.error('Switch 1 - Home Assistant error:', response.status, text);
                             alert('Error: ' + response.status);
                             return;
                           }
 
-                          console.log('Success:', response.status);
+                          console.log('Switch 1 - Success:', response.status);
                           setTimeout(() => location.reload(), 500);
                         })
                         .catch(error => {
-                          console.error('Network error:', error);
+                          console.error('Switch 1 - Network error:', error);
                           alert('Network error - check console');
                         });
                       ">
@@ -328,16 +328,16 @@
                         .then(async response => {
                           if (!response.ok) {
                             const text = await response.text();
-                            console.error('Home Assistant error:', response.status, text);
+                            console.error('Switch 2 - Home Assistant error:', response.status, text);
                             alert('Error: ' + response.status);
                             return;
                           }
 
-                          console.log('Success:', response.status);
+                          console.log('Switch 2 - Success:', response.status);
                           setTimeout(() => location.reload(), 500);
                         })
                         .catch(error => {
-                          console.error('Network error:', error);
+                          console.error('Switch 2 - Network error:', error);
                           alert('Network error - check console');
                         });
                       ">
@@ -353,16 +353,17 @@
                   <div style="width:100%;">
                     <div class="device-name">${LIGHT_1_DISPLAY_NAME}</div>
 
-                    <!-- Dummy State -->
+                    <!-- Light State -->
                     <div class="{{ if eq $lightState "on" }}status-on{{ else }}status-off{{ end }}">
                       {{ $lightState }}
                     </div>
+                  </div>
 
-                    <!-- Brightness Label -->
+                  <!-- Brightness Label -->
+                  <div>
                     <div class="slider-value" style="font-size:12px;">
-                      Brightness: {{ $brightness }} / 255
+                      {{ $brightness }}
                     </div>
-
                   </div>
 
                   <!-- Toggle Button -->
@@ -394,7 +395,7 @@
                     class="dimmer-slider"
                     id="brightnessSlider"
                     onchange="
-                      document.querySelector('.slider-value').innerText = 'Brightness: ' + value + ' / 255';
+                      document.querySelector('.slider-value').innerText = '' + value;
                       fetch('${HOME_ASSISTANT_URL}/api/services/light/turn_on', {
                         method: 'POST',
                         headers: {
@@ -406,7 +407,7 @@
                           brightness: parseInt(value)
                         })
                       })
-                      .then(response => response.ok ? console.log('Brightness updated') : alert('Error updating brightness'))
+                      .then(response => response.ok ? console.log('Brightness updated to response.value') : alert('Error updating brightness'))
                       .catch(() => alert('Network error'));
                     " />
                 </div>
