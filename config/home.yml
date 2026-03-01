@@ -200,6 +200,38 @@
               .brightness-controls button {
                 margin-left: 6px;
               }
+
+              .dimmer-container {
+                margin-top: 8px;
+              }
+
+              .dimmer-slider {
+                width: 100%;
+                margin-top: 6px;
+                -webkit-appearance: none;
+                height: 6px;
+                border-radius: 4px;
+                background: #ccc;
+                outline: none;
+              }
+
+              .dimmer-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: var(--color-primary);
+                cursor: pointer;
+              }
+
+              .dimmer-slider::-moz-range-thumb {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: var(--color-primary);
+                cursor: pointer;
+              }
             </style>
 
             {{/* Fetch Switch 1 */}}
@@ -318,62 +350,65 @@
               <!-- LIGHT -->
               <div class="device-card widget-content-frame">
                 <div class="device-row">
-                  <div>
+                  <div style="width:100%;">
                     <div class="device-name">${LIGHT_1_DISPLAY_NAME}</div>
+
+                    <!-- Dummy State -->
                     <div class="{{ if eq $lightState "on" }}status-on{{ else }}status-off{{ end }}">
                       {{ $lightState }}
                     </div>
-                    {{ if eq $lightState "on" }}
-                      <div style="font-size:12px;">Brightness: {{ $brightness }}</div>
-                    {{ end }}
+
+                    <!-- Brightness Label -->
+                    <div class="slider-value" style="font-size:12px;">
+                      Brightness: {{ $brightness }} / 255
+                    </div>
+
                   </div>
 
+                  <!-- Toggle Button -->
                   <div>
-                    <!-- Toggle -->
                     <button class="btn"
-                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/light/toggle',{
-                        method:'POST',
-                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
-                        body: JSON.stringify({entity_id:'light.${LIGHT_1_ENTITY_ID}'})
+                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/light/toggle', {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': 'Bearer ${HOME_ASSISTANT_TOKEN}',
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({entity_id: 'light.${LIGHT_1_ENTITY_ID}'})
                       })
-                        .then(async response => {
-                          if (!response.ok) {
-                            const text = await response.text();
-                            console.error('Home Assistant error:', response.status, text);
-                            alert('Error: ' + response.status);
-                            return;
-                          }
-
-                          console.log('Success:', response.status);
-                          setTimeout(() => location.reload(), 500);
-                        })
-                        .catch(error => {
-                          console.error('Network error:', error);
-                          alert('Network error - check console');
-                        });
-                      ">💡
-                    </button>
-
-                    <!-- Brightness Down -->
-                    <button class="btn"
-                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/light/turn_on',{
-                        method:'POST',
-                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
-                        body: JSON.stringify({entity_id:'light.${LIGHT_1_ENTITY_ID}',brightness_step:-25})
-                      }); setTimeout(()=>location.reload(),1000);">
-                      ➖
-                    </button>
-
-                    <!-- Brightness Up -->
-                    <button class="btn"
-                      onclick="fetch('${HOME_ASSISTANT_URL}/api/services/light/turn_on',{
-                        method:'POST',
-                        headers:{'Authorization':'Bearer ${HOME_ASSISTANT_TOKEN}','Content-Type':'application/json'},
-                        body: JSON.stringify({entity_id:'light.living_room',brightness_step:25})
-                      }); setTimeout(()=>location.reload(),1000);">
-                      ➕
+                      .then(response => response.ok ? location.reload() : alert('Error'))
+                      .catch(() => alert('Network error'));">
+                      💡
                     </button>
                   </div>
+
+                </div>
+
+                <!-- Dimmer Slider -->
+                <div class="dimmer-container">
+                  <input
+                    type="range"
+                    min="0"
+                    max="255"
+                    value="{{ $brightness }}"
+                    class="dimmer-slider"
+                    id="brightnessSlider"
+                    onchange="
+                      document.querySelector('.slider-value').innerText = 'Brightness: ' + value + ' / 255';
+                      fetch('${HOME_ASSISTANT_URL}/api/services/light/turn_on', {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': 'Bearer ${HOME_ASSISTANT_TOKEN}',
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          entity_id: 'light.${LIGHT_1_ENTITY_ID}',
+                          brightness: parseInt(value)
+                        })
+                      })
+                      .then(response => response.ok ? console.log('Brightness updated') : alert('Error updating brightness'))
+                      .catch(() => alert('Network error'));
+                    " />
                 </div>
               </div>
 
