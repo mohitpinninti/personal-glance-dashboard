@@ -231,7 +231,7 @@
               <div class="device-card widget-content-frame">
                 <div class="device-row">
                   <div>
-                    <div class="device-name">Switch 1</div>
+                    <div class="device-name">${SWITCH_1_DISPLAY_NAME}</div>
                     <div class="{{ if eq $s1State "on" }}status-on{{ else }}status-off{{ end }}">
                       {{ $s1State }}
                     </div>
@@ -275,7 +275,7 @@
               <div class="device-card widget-content-frame">
                 <div class="device-row">
                   <div>
-                    <div class="device-name">Switch 2</div>
+                    <div class="device-name">${SWITCH_2_DISPLAY_NAME}</div>
                     <div class="{{ if eq $s2State "on" }}status-on{{ else }}status-off{{ end }}">
                       {{ $s2State }}
                     </div>
@@ -319,7 +319,7 @@
               <div class="device-card widget-content-frame">
                 <div class="device-row">
                   <div>
-                    <div class="device-name">Living Room Light</div>
+                    <div class="device-name">${LIGHT_1_DISPLAY_NAME}</div>
                     <div class="{{ if eq $lightState "on" }}status-on{{ else }}status-off{{ end }}">
                       {{ $lightState }}
                     </div>
