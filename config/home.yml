@@ -74,7 +74,7 @@
                 {{ $url2 := printf "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&temperature_unit=%s&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=America/New_York" $latitude $longitude $temp_unit}}    
                 {{ $req2 := newRequest $url2 | getResponse }}
 
-                <div>Some Nonsense</div>
+                <div>${SEVEN_DAY_WEATHER_LOCATION}</div>
 
                 <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
                 
@@ -363,6 +363,47 @@
 
     - size: full
       widgets:
+        - type: custom-api
+          title: Testing Call Reminder Widget
+          cache: 15m
+          url: ${FLASK_SERVER}/notion/contacts
+          template: |
+            <div>
+              {{ $maxItems := 6 }}
+              {{ $shown := 0 }}
+
+              {{/* --------------------------- Loop over all people --------------------------- */}}
+              {{ range $person := .JSON.Array "people" }}
+                {{ if lt $shown $maxItems }}
+                  {{/* Determine color based on status */}}
+                  {{ $color := "green" }}
+                  {{ if eq ($person.String "status") "overdue" }}{{ $color = "red" }}{{ end }}
+                  {{ if eq ($person.String "status") "approaching" }}{{ $color = "yellow" }}{{ end }}
+
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="width:170px;">
+                      <div class="size-h2">{{ $person.String "name" }}</div>
+                      <div class="size-h4 color-{{ $color }}">
+                        {{ printf "%.1fx" ($person.Float "urgency") }} · {{ $person.Int "days_since" }}d ago · ~{{ $person.Int "frequency" }}d
+                      </div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                      <button class="size-h4">📞</button>
+                      <button class="size-h4">💬</button>
+                      <button class="size-h4">⏳</button>
+                    </div>
+                  </div>
+
+                  {{ $shown = add $shown 1 }}
+                {{ end }}
+              {{ end }}
+
+              {{/* --------------------------- Show All Link --------------------------- */}}
+              <div style="margin-top:8px;">
+                <a href="#" class="size-h4 color-primary">Show All</a>
+              </div>
+            </div>
+
         - type: group
           widgets:
             - type: hacker-news
