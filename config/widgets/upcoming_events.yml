@@ -1,0 +1,110 @@
+- type: custom-api
+  title: Upcoming Events
+  cache: 2h
+  template: |
+    {{/* ================= TOKEN ================= */}}
+    {{ $token := newRequest "https://oauth2.googleapis.com/token"
+      | withHeader "Content-Type" "application/x-www-form-urlencoded"
+      | withStringBody "client_id=${GOOGLE_CLIENT_ID}&client_secret=${GOOGLE_CLIENT_SECRET}&refresh_token=${GOOGLE_REFRESH_TOKEN}&grant_type=refresh_token"
+      | getResponse }}
+
+    {{ if ne $token.Response.StatusCode 200 }}
+      <p>Token Error: {{ $token.Response.Status }}</p>
+    {{ else }}
+
+      {{ $accessToken := $token.JSON.String "access_token" }}
+      {{ $now := now | formatTime "rfc3339" }}
+      {{ $future := offsetNow "720h" | formatTime "rfc3339" }}
+
+      {{/* ================= EVENTS ================= */}}
+      {{ $events := newRequest "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+        | withParameter "timeMin" $now
+        | withParameter "timeMax" $future
+        | withParameter "singleEvents" "true"
+        | withParameter "orderBy" "startTime"
+        | withHeader "Authorization" (print "Bearer " $accessToken)
+        | getResponse }}
+
+      {{ if ne $events.Response.StatusCode 200 }}
+        <p>Event Error: {{ $events.Response.Status }}</p>
+      {{ else }}
+
+        <div>
+          {{ $currentDate := "" }}
+
+          {{ range $events.JSON.Array "items" }}
+
+            {{/* ---- Extract event fields ---- */}}
+            {{ $summary := .String "summary" }}
+            {{ $location := .String "location" }}
+            {{ $description := .String "description" }}
+
+            {{/* ---- Compute start/end + all-day ---- */}}
+            {{ $startRaw := .String "start.dateTime" }}
+            {{ $isAllDay := false }}
+            {{ $start := "" }}
+            {{ $end := "" }}
+
+            {{ if eq $startRaw "" }}
+              {{ $isAllDay = true }}
+              {{ $start = (.String "start.date") | parseLocalTime "DateOnly" }}
+              {{ $end = (.String "end.date") | parseLocalTime "DateOnly" }}
+            {{ else }}
+              {{ $start = $startRaw | parseTime "rfc3339" }}
+              {{ $end = (.String "end.dateTime") | parseTime "rfc3339" }}
+            {{ end }}
+
+            {{ $eventDate := $start | formatTime "Mon, Jan 2" }}
+
+            {{/* ---- Date header ---- */}}
+            {{ if ne $eventDate $currentDate }}
+              <div style="
+                {{ if ne $currentDate "" }}margin-top:20px;{{ end }}
+                font-size:14px;
+                font-weight:600;
+                opacity:0.7;">
+                {{ $eventDate }}
+              </div>
+              {{ $currentDate = $eventDate }}
+            {{ end }}
+
+            <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+
+              {{ if ne $summary "" }}
+                <div style="font-weight:500;">
+                  {{ $summary }}
+                </div>
+              {{ end }}
+
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="font-size:13px; opacity:0.6;">
+                  {{ if not $isAllDay }}
+                    {{ $start | formatTime "3:04 PM" }} - {{ $end | formatTime "3:04 PM" }}
+                  {{ else }}
+                    All Day
+                  {{ end }}
+                </div>
+
+                <div style="font-size:13px; opacity:0.5;" {{ $start | toRelativeTime }}>
+                </div>
+              </div>
+
+              {{ if ne $location "" }}
+                <div style="margin-top:6px; font-size:13px; opacity:0.7;">
+                  {{ $location }}
+                </div>
+              {{ end }}
+
+              {{ if ne $description "" }}
+                <div style="margin-top:6px; font-size:13px; opacity:0.65; line-height:1.4;">
+                  {{ $description }}
+                </div>
+              {{ end }}
+
+            </div>
+
+          {{ end }}   {{/* END range */}}
+        </div>
+
+      {{ end }}   {{/* END events status check */}}
+    {{ end }}     {{/* END token status check */}}
