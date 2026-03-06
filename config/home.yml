@@ -11,36 +11,26 @@
 
             - $include: widgets/seven_day_weather.yml
 
-        - type: calendar
-          first-day-of-week: monday
+            - type: calendar
+              first-day-of-week: monday
 
         - $include: widgets/upcoming_events.yml
 
     - size: full
       widgets:
-        - $include: widgets/call_reminder.yml
+        # - $include: widgets/call_reminder.yml
 
         - type: group
           widgets:
             - type: hacker-news
             - type: lobsters
-
-        - type: videos
-          channels:
-            - UCXuqSBlHAE6Xw-yeJA0Tunw
-            - UCR-DXc1voovS8nhAvccRZhg
-            - UCsBjURrPoezykLs9EqgamOA
-            - UCBJycsmduvYEL83R_U4JriQ
-            - UCHnyfMqiRRG1u-2MsSQLbXA
-
-        - type: group
-          widgets:
             - type: reddit
               subreddit: technology
               show-thumbnails: true
             - type: reddit
               subreddit: selfhosted
               show-thumbnails: true
+
 
     - size: small
       widgets:
@@ -57,4 +47,8 @@
             - symbol: MSFT
               name: Microsoft
 
-        - $include: widgets/home_controls.yml
+        - type: group
+          widgets:
+            $include: widgets/home_controls.yml
+            
+            $include: widgets/habit_tracker.yml
