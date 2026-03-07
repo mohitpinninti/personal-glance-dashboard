@@ -3,7 +3,7 @@
 ### Necessary TODOs:
 - Rewrite UI for Call Reminders widget
 - Integrate Flask API into this repo
-- Habit/Resolution Tracking
+- better updates to Habit/Resolution
 
 ### Deprioritized TODOs:
 - News (fiddle with making this more customizeable)
@@ -14,3 +14,7 @@
 - More responsive Home Assistant/Controls UI - Would be nice if the buttons changed dynamically and didn't need to depend on cache updates
 - Make Bearer tokens more secure in Home Assistant/Controls widget (move to flask app) - P2 until deployment
 - Make Bearer tokens more secure in Upcoming Events widget (move to flask app) - P2 until deployment
+- Better habit and resolution tracking - maybe add a dashboard as a widget?
+
+### Completed TODOs (just to make me feel good lol):
+- ~~Habit/Resolution Tracking~~

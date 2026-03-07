@@ -26,13 +26,15 @@
         transform: scale(1.2);
       }
 
-      .completed {
-        text-decoration: line-through;
-        color: var(--color-text);
+      /* default state */
+      .habit-text {
+        color: var(--color-positive);
       }
 
-      .incomplete {
-        color: var(--color-positive);
+      /* when checked */
+      .habit-row input:checked + .habit-text {
+        text-decoration: line-through;
+        color: var(--color-text);
       }
     </style>
 
@@ -43,7 +45,7 @@
       {{ $date := $habit.String "date" }}
       {{ $page_id := $habit.String "page_id" }}
 
-      <div class="habit-card widget-content-frame">
+      <div class="habit-card">
 
         <div class="habit-date">
           {{ $date }}
@@ -54,6 +56,7 @@
           <div class="habit-row">
 
             <input
+              id="habit-{{ $name }}"
               type="checkbox"
               {{ if $value.Bool }}checked{{ end }}
               onclick="
@@ -75,16 +78,16 @@
                   if(!r.ok){
                     alert('Failed to update habit');
                     return;
+                    setTimeout(() => location.reload(), 400);
                   }
-                  setTimeout(() => location.reload(), 400);
                 })
                 .catch(() => alert('Network error'));
               "
             />
 
-            <div class="{{ if $value.Bool }}completed{{ else }}incomplete{{ end }}">
+            <label for="habit-{{ $name }}" class="habit-text">
               {{ $name }}
-            </div>
+            </label>
 
           </div>
 
