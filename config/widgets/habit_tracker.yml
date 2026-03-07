@@ -1,0 +1,97 @@
+- type: custom-api
+  title: Daily Habits
+  url: ${FLASK_SERVER}/notion/daily-habits
+  cache: 1h
+  template: |
+    <style>
+      .habit-card {
+        padding: 10px;
+        border-radius: 8px;
+      }
+
+      .habit-date {
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .habit-row {
+        display: flex;
+        align-items: center;
+        margin: 6px 0;
+        gap: 8px;
+      }
+
+      .habit-row input {
+        cursor: pointer;
+        transform: scale(1.2);
+      }
+
+      .completed {
+        text-decoration: line-through;
+        color: var(--color-text);
+      }
+
+      .incomplete {
+        color: var(--color-positive);
+      }
+    </style>
+
+    {{ if eq .Response.StatusCode 200 }}
+
+      {{ $habit := index (.JSON.Array "habits") 0 }}
+      {{ $checkboxes := $habit.Get "checkboxes" }}
+      {{ $date := $habit.String "date" }}
+      {{ $page_id := $habit.String "page_id" }}
+
+      <div class="habit-card widget-content-frame">
+
+        <div class="habit-date">
+          {{ $date }}
+        </div>
+
+        {{ range $name, $value := $checkboxes.Map }}
+
+          <div class="habit-row">
+
+            <input
+              type="checkbox"
+              {{ if $value.Bool }}checked{{ end }}
+              onclick="
+                const checked = this.checked;
+
+                fetch('${FLASK_SERVER}/notion/update-habit', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    page_id: '{{ $page_id }}',
+                    habit: '{{ $name }}',
+                    value: checked,
+                    date: '{{ $date }}'
+                  })
+                })
+                .then(r => {
+                  if(!r.ok){
+                    alert('Failed to update habit');
+                    return;
+                  }
+                  setTimeout(() => location.reload(), 400);
+                })
+                .catch(() => alert('Network error'));
+              "
+            />
+
+            <div class="{{ if $value.Bool }}completed{{ else }}incomplete{{ end }}">
+              {{ $name }}
+            </div>
+
+          </div>
+
+        {{ end }}
+
+      </div>
+
+    {{ else }}
+      <div class="status-off">Failed to fetch habits ({{ .Response.StatusCode }})</div>
+    {{ end }}

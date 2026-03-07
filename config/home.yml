@@ -49,6 +49,5 @@
 
         - type: group
           widgets:
-            $include: widgets/home_controls.yml
-            
             $include: widgets/habit_tracker.yml
+            $include: widgets/home_controls.yml

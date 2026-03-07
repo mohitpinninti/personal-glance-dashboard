@@ -63,10 +63,6 @@
           # Optionally hide the location from being displayed in the widget
           # hide-location: true
 
-        - type: iframe
-          source: http://192.168.0.124:8123/dashboard-mohit/weather
-          height: 400
-
         - type: markets
           markets:
             - symbol: SPY
