@@ -12,3 +12,15 @@ services:
     ports:
       - 8080:8080
     env_file: .env
+  
+  glance-flask-api:
+      container_name: glance-flask-api
+      build:
+        context: ./flask
+        dockerfile: Dockerfile
+      restart: unless-stopped
+      ports:
+        - 5000:5000
+      env_file: .env
+      volumes:
+        - ./flask:/app
