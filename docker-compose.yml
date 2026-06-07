@@ -3,24 +3,53 @@ services:
     container_name: glance
     image: glanceapp/glance
     restart: unless-stopped
+
+    environment:
+      FLASK_SERVER: ${FLASK_SERVER}
+      WEATHER_LOCATION: ${WEATHER_LOCATION}
+      SEVEN_DAY_WEATHER_LOCATION: ${SEVEN_DAY_WEATHER_LOCATION}
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REFRESH_TOKEN: ${GOOGLE_REFRESH_TOKEN}
+
+      HOME_ASSISTANT_URL: ${HOME_ASSISTANT_URL}
+      HOME_ASSISTANT_TOKEN: ${HOME_ASSISTANT_TOKEN}
+
+      SWITCH_1_ENTITY_ID: ${SWITCH_1_ENTITY_ID}
+      SWITCH_1_DISPLAY_NAME: ${SWITCH_1_DISPLAY_NAME}
+
+      SWITCH_2_ENTITY_ID: ${SWITCH_2_ENTITY_ID}
+      SWITCH_2_DISPLAY_NAME: ${SWITCH_2_DISPLAY_NAME}
+
+      LIGHT_1_ENTITY_ID: ${LIGHT_1_ENTITY_ID}
+      LIGHT_1_DISPLAY_NAME: ${LIGHT_1_DISPLAY_NAME}
+
     volumes:
       - ./config:/app/config
       - ./assets:/app/assets
       - /etc/localtime:/etc/localtime:ro
-      # Optionally, also mount docker socket if you want to use the docker containers widget
-      # - /var/run/docker.sock:/var/run/docker.sock:ro
+
     ports:
-      - 8080:8080
-    env_file: .env
-  
+      - "8080:8080"
+
   glance-flask-api:
-      container_name: glance-flask-api
-      build:
-        context: ./flask
-        dockerfile: Dockerfile
-      restart: unless-stopped
-      ports:
-        - 5000:5000
-      env_file: .env
-      volumes:
-        - ./flask:/app
+    container_name: glance-flask-api
+
+    build:
+      context: ./flask
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      NOTION_INTEGRATION_SECRET: ${NOTION_INTEGRATION_SECRET}
+      NOTION_CALL_REMINDER_DB_ID: ${NOTION_CALL_REMINDER_DB_ID}
+      NOTION_HABIT_TRACKER_DB_ID: ${NOTION_HABIT_TRACKER_DB_ID}
+      UI_ENDPOINT: ${UI_ENDPOINT}
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - ./flask:/app
