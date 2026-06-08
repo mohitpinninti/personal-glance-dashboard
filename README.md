@@ -1,10 +1,9 @@
 ## Contains Config Files for personal Glance Dashboard
 
 ### Necessary TODOs:
-- Create script to auto-launch on startup (for actually hosting) - reported during selfhost
-- Rewrite UI for "Call Reminders" widget
-- better updates to "Daily Habits" widget
-- reduce number of items in "Upcoming Events" widget and/or add "Show More"/"Show Less" buttons. - reported during selfhost
+- Rewrite UI for Call Reminders widget
+- Integrate Flask API into this repo
+- better updates to Habit/Resolution
 
 ### Deprioritized TODOs:
 - News (fiddle with making this more customizeable)
@@ -16,8 +15,6 @@
 - Make Bearer tokens more secure in Home Assistant/Controls widget (move to flask app) - P2 until deployment
 - Make Bearer tokens more secure in Upcoming Events widget (move to flask app) - P2 until deployment
 - Better habit and resolution tracking - maybe add a dashboard as a widget?
-- Clean up flask api (looks messy)
 
 ### Completed TODOs (just to make me feel good lol):
 - ~~Habit/Resolution Tracking~~
-- ~~Integrate Flask API into this repo~~
